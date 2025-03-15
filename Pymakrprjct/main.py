@@ -1,7 +1,7 @@
 import time
 import machine
 from use_neopixel import set_pixel_color
-from use_INMP import sound_level, stop_INMP
+from use_INMP import sound_level
 
 # Set up the button
 button = machine.Pin(0, machine.Pin.IN, machine.Pin.PULL_UP)
@@ -22,7 +22,7 @@ while True:
         print("# INMP441 Sound Level Monitor")
         print("# Based on Mike Teachman's I2S implementation")
         print("# Make sounds to see the levels change")
-        print("# Running for 10 s")
+        print("# Running for 3 sec")
 
         try:
             # Moving average window for smoothing
@@ -30,7 +30,7 @@ while True:
             values = [0] * window_size
             loop_counter = 0
 
-            while loop_counter < 1e2:
+            while loop_counter < 30:
                 # Get current sound level
                 level = sound_level()
 
