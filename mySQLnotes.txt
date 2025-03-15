@@ -1,0 +1,15 @@
+Created a table and a graph with Ninja Table and Ninja Chart
+
+Chart is also accessible via phpMyAdmin
+
+see [Github ignored] passwords.txt for typical inject query and passwords
+
+Works, but perhaps do need to select database
+
+The chart breaks when data is injected that has to be plotted before other data
+
+Tutorial for injecting mysql database with esp32 (Using POST)
+https://randomnerdtutorials.com/esp32-esp8266-mysql-database-php/
+https://raw.githubusercontent.com/RuiSantosdotme/ESP32-ESP8266-PHP-MySQL/master/code/HTTPS_ESP32_MySQL_Database_PHP.ino
+
+Used Firefox to debug posting

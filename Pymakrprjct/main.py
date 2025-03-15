@@ -26,6 +26,7 @@ while True:
         if previous_button_state != button.value():
             print("Button not pressed!")
             previous_button_state = button.value()
-    np[0] = (0,0,0)
-    np.write()
-    time.sleep(1)   
+            # Change pixels to empty
+            np[0] = (0,0,0)
+            np.write() 
+   
