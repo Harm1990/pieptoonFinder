@@ -22,7 +22,7 @@ while True:
         print("# INMP441 Sound Level Monitor")
         print("# Based on Mike Teachman's I2S implementation")
         print("# Make sounds to see the levels change")
-        print("# Running for 3 sec")
+        print("# Running for 0.1 sec")
 
         try:
             # Moving average window for smoothing
@@ -30,7 +30,7 @@ while True:
             values = [0] * window_size
             loop_counter = 0
 
-            while loop_counter < 30:
+            while loop_counter < 10:
                 # Get current sound level
                 level = sound_level()
 
@@ -43,7 +43,6 @@ while True:
                 print(smoothed_level)
 
                 # Small delay
-                time.sleep(0.1)
                 loop_counter += 1
 
         except KeyboardInterrupt:

@@ -1,6 +1,7 @@
 from machine import Pin, I2S
 import math
 import struct
+import time
 
 # INMP441 I2S Microphone Example for Raspberry Pi Pico
 # Based on Mike Teachman's micropython-i2s-examples
@@ -13,8 +14,8 @@ WS_PIN = Pin(4) # INMP441 WS pin (Brown)
 
 SAMPLE_SIZE_IN_BITS = 32
 FORMAT = I2S.MONO
-SAMPLE_RATE = 16000
-BUFFER_LENGTH_IN_BYTES = 40000  # Based on Mike's example
+SAMPLE_RATE = 16000 # Hz
+BUFFER_LENGTH_IN_BYTES = 64000  # 16000 * 4 bytes (32-bit samples)
 
 def sound_level():
     """Capture audio and calculate sound level
@@ -37,12 +38,13 @@ def sound_level():
     # First read dummy samples to allow the microphone to settle
 
     # Number of samples to read each time
-    NUM_SAMPLE_BYTES = 2048
+    NUM_SAMPLE_BYTES = 32000 # Returns 4000 samples
 
     # Raw samples will be stored in this buffer (signed 32-bit integers)
     samples_raw = bytearray(NUM_SAMPLE_BYTES)
 
     # Read samples from I2S microphone
+    num_bytes_read = audio_in.readinto(samples_raw) # Do a dummy read to get rid of startup effect
     num_bytes_read = audio_in.readinto(samples_raw)
 
     if num_bytes_read == 0:
