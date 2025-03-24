@@ -1,0 +1,9 @@
+Tried to access data filesystem using
+	https://learn.adafruit.com/micropython-basics-esp8266-webrepl/access-webrepl
+
+Used ChatGPT to create analysis script, externally created 330 Hz beep tone as input
+
+	Next steps
+	Use background level as scaler for intensity, e.g. 4000 to 8000 Hz noise
+	Connect to wifi and post to website
+	Set timer to measure / average for certain periods

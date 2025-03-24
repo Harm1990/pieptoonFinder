@@ -160,3 +160,12 @@ cython_debug/
 #.idea/
 post-esp-data.php
 passwords.txt
+webrepl-master/FileSaver.js
+webrepl-master/LICENSE
+webrepl-master/make_html_js.py
+webrepl-master/README.md
+webrepl-master/term.js
+webrepl-master/webrepl.css
+webrepl-master/webrepl.html
+webrepl-master/webrepl.js
+webrepl-master/webrepl_cli.py

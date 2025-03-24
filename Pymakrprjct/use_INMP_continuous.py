@@ -28,8 +28,9 @@ WS_PIN = Pin(4) # INMP441 WS pin (Brown)
 
 SAMPLE_SIZE_IN_BITS = 32
 FORMAT = I2S.MONO
-SAMPLE_RATE = 48000 # Hz
+SAMPLE_RATE = 16000 # Hz
 BUFFER_LENGTH_IN_BYTES = 40000
+FILENAME = "audio.csv"
 
 """Capture audio and calculate sound level
 
@@ -49,7 +50,7 @@ audio_in = I2S(
 )
 
 # Number of samples to read each time
-NUM_SAMPLE_BYTES = 1000 # Returns 8000 samples
+NUM_SAMPLE_BYTES = 16000*4 # Returns 8000 samples
 # Raw samples will be stored in this buffer (signed 32-bit integers)
 samples_raw = bytearray(NUM_SAMPLE_BYTES)
 
@@ -75,7 +76,15 @@ if num_bytes_read == 0:
 
 # Process raw samples
 samples = bytearray_to_ints(samples_raw)
-for sample in samples:
-    print(sample)
+
+
+with open(FILENAME, "w") as f:
+    for sample in samples:
+        f.write(f"{sample}\n") # Write line to csv
+
+f.close()
+print(f"Recording complete. Saved {len(samples)} samples to {FILENAME}")
+
+
     
     
