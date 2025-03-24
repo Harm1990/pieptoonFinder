@@ -3,6 +3,50 @@ import math
 import struct
 import time
 
+# Goertzel algorithm to compute energy at a specific frequency
+def goertzel(samples, target_freq, sample_rate):
+    N = len(samples)
+    k = int(0.5 + (N * target_freq) / sample_rate)
+    omega = (2.0 * math.pi * k) / N
+    coeff = 2.0 * math.cos(omega)
+    s_prev = 0.0
+    s_prev2 = 0.0
+    
+    for sample in samples:
+        s = sample + coeff * s_prev - s_prev2
+        s_prev2 = s_prev
+        s_prev = s
+    
+    power = s_prev2**2 + s_prev**2 - coeff * s_prev * s_prev2
+    return power
+
+# Compute total intensity in a frequency range with higher accuracy
+def compute_intensity(samples, f_min, f_max, sample_rate):
+    step = 5  # Higher accuracy by scanning every 1 Hz
+    return sum(goertzel(samples, f, sample_rate) for f in range(f_min, f_max + 1, step))
+
+# Compute background noise level
+def compute_background_noise(samples, sample_rate):
+    intensity = 0
+    background_levels = [4000,5000,6000,7000,8000]
+    for level in background_levels:
+        intensity += goertzel(samples,level,sample_rate)
+    return intensity / len(background_levels)
+
+def bytearray_to_ints(data):
+    """ Convert a bytearray of I2S data (32-bit words) to a list of 24-bit signed integers. """
+    ints = []
+    for i in range(0, len(data), 4):  # Process 4 bytes at a time (32-bit word)
+        sample = data[i:i+3]  # Take the first 3 bytes (24-bit data)
+        int_value = int.from_bytes(sample, 'little')  # Convert to int (unsigned)
+
+        # Convert to signed 24-bit integer manually
+        if int_value & 0x800000:  # If the 24th bit is set, sign extend
+            int_value -= 0x1000000  # Convert to negative value
+
+        ints.append(int_value) # Shift 8 bits
+    return ints
+
 # INMP441 I2S Microphone Example for Raspberry Pi Pico
 # Based on Mike Teachman's micropython-i2s-examples
 # https://github.com/miketeachman/micropython-i2s-examples/tree/master
@@ -15,61 +59,67 @@ WS_PIN = Pin(4) # INMP441 WS pin (Brown)
 SAMPLE_SIZE_IN_BITS = 32
 FORMAT = I2S.MONO
 SAMPLE_RATE = 16000 # Hz
-BUFFER_LENGTH_IN_BYTES = 64000  # 16000 * 4 bytes (32-bit samples)
+BUFFER_LENGTH_IN_BYTES = 40000
+FILENAME = "audio.csv"
 
-def sound_level():
-    """Capture audio and calculate sound level
+"""Capture audio and calculate sound level
 
-    Based on Mike Teachman's example but simplified for sound level monitoring.
-    """
-    # Initialize I2S for microphone
-    audio_in = I2S(
-        I2S_ID,
-        sck=Pin(SCK_PIN),
-        ws=Pin(WS_PIN),
-        sd=Pin(SD_PIN),
-        mode=I2S.RX,
-        bits=SAMPLE_SIZE_IN_BITS,
-        format=FORMAT,
-        rate=SAMPLE_RATE,
-        ibuf=BUFFER_LENGTH_IN_BYTES,
-    )
+Based on Mike Teachman's example but simplified for sound level monitoring.
+"""
+# Initialize I2S for microphone
+audio_in = I2S(
+    I2S_ID,
+    sck=Pin(SCK_PIN),
+    ws=Pin(WS_PIN),
+    sd=Pin(SD_PIN),
+    mode=I2S.RX,
+    bits=SAMPLE_SIZE_IN_BITS,
+    format=FORMAT,
+    rate=SAMPLE_RATE,
+    ibuf=BUFFER_LENGTH_IN_BYTES,
+)
 
-    # First read dummy samples to allow the microphone to settle
+# Number of samples to read each time
+NUM_SAMPLE_BYTES = 16000*4 # Returns 8000 samples
+# Raw samples will be stored in this buffer (signed 32-bit integers)
+samples_raw = bytearray(NUM_SAMPLE_BYTES)
 
-    # Number of samples to read each time
-    NUM_SAMPLE_BYTES = 32000 # Returns 4000 samples
 
-    # Raw samples will be stored in this buffer (signed 32-bit integers)
-    samples_raw = bytearray(NUM_SAMPLE_BYTES)
 
-    # Read samples from I2S microphone
-    num_bytes_read = audio_in.readinto(samples_raw) # Do a dummy read to get rid of startup effect
-    num_bytes_read = audio_in.readinto(samples_raw)
+# Perform startup read
+# 2^18 cycles needed, which is 32768 bytes, but since we use mono, divide by two
+IGNORE_BYTES = 16384
+samples_startup = bytearray(1024)
+# Read samples from I2S microphone
+ignored = 0
+while ignored < IGNORE_BYTES:
+    bytes_read = audio_in.readinto(samples_startup)
+    if bytes_read:
+        ignored += bytes_read
 
-    if num_bytes_read == 0:
-        return 0
 
-    # Process raw samples
-    format_str = "<{}i".format(num_bytes_read // 4)  # '<' for little-endian, 'i' for 32-bit signed integer
-    samples = struct.unpack(format_str, samples_raw[:num_bytes_read])
+# Read samples from I2S microphone
+num_bytes_read = audio_in.readinto(samples_raw)
 
-    # Calculate RMS (Root Mean Square) which represents sound level
-    sum_squares = 0
-    for sample in samples:
-        # Need to shift right by 8 bits for INMP441 (24-bit samples in 32-bit words)
-        adjusted_sample = sample >> 8
-        sum_squares += adjusted_sample * adjusted_sample # square
+if num_bytes_read == 0:
+    print("Error num_bytes_read=0")
 
-    # Calculate RMS
-    rms = math.sqrt(sum_squares / num_bytes_read) # mean and square root
+# Process raw samples
+samples = bytearray_to_ints(samples_raw)
 
-    # Scale to 0-100 range
-    # The maximum value for a 24-bit sample is 2^23 = 8388608
-    MAX_VALUE = 8388608
-    level = min(100, (rms / MAX_VALUE) * 1000)  # Multiply by 1000 for better scaling
+# Now use FFT to calculate intensities
+# Compute background noise level
+print(f"Start background noise; {time.ticks_ms()/1000}")
+background_noise = compute_background_noise(samples, SAMPLE_RATE)
+print(f"Finish background noise; {time.ticks_ms()/1000}")
+print(f"Start intensity calc; {time.ticks_ms()/1000}")
+# Compute intensity in the specified ranges, adjusted and scaled for background noise
+raw_intensity_320_340 = compute_intensity(samples, 320, 340, SAMPLE_RATE)
+print(f"One done; {time.ticks_ms()/1000}")
+raw_intensity_1625_1675 = compute_intensity(samples, 1625, 1675, SAMPLE_RATE)
+print(f"Two done; {time.ticks_ms()/1000}")
+adjusted_intensity_320_340 = (raw_intensity_320_340 - background_noise * (340 - 320 + 1)) / background_noise
+adjusted_intensity_1625_1675 = (raw_intensity_1625_1675 - background_noise * (1675 - 1625 + 1)) / background_noise
 
-    audio_in.deinit()
-
-    return level
-
+print(f"Scaled Intensity in 320-340 Hz: {adjusted_intensity_320_340}")
+print(f"Scaled Intensity in 1625-1675 Hz: {adjusted_intensity_1625_1675}")

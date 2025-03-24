@@ -42,6 +42,7 @@ if __name__ == "__main__":
     # Compute intensity in the specified ranges
     intensity_320_340 = compute_avg_intensity(freqs, fft_magnitude, 320, 340)
     intensity_1625_1675 = compute_avg_intensity(freqs, fft_magnitude, 1625, 1675)
+    intensity_4000_8000 = compute_avg_intensity(freqs, fft_magnitude, 4000, 8000)
     
-    print(f"Intensity in 320-340 Hz: {intensity_320_340}")
-    print(f"Intensity in 1625-1675 Hz: {intensity_1625_1675}")
+    print(f"Intensity in 320-340 Hz wrt 4 to 8 kHz: {intensity_320_340/intensity_4000_8000}")
+    print(f"Intensity in 1625-1675 Hz wrt 4 to 8 kHz: {intensity_1625_1675/intensity_4000_8000}")
