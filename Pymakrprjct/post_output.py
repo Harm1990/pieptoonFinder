@@ -1,22 +1,7 @@
-import network
-import urequests
-import wifi_config
 import time
-import json
+import os
 
-# Function to connect to WiFi
-def connect_wifi():
-    wlan = network.WLAN(network.STA_IF)
-    wlan.active(True)
-    
-    if not wlan.isconnected():
-        print("Connecting to WiFi...")
-        wlan.connect(wifi_config.WIFI_AP, wifi_config.WIFI_PW)
-        
-        while not wlan.isconnected():
-            time.sleep(1)
-    
-    print("Connected to WiFi:", wlan.ifconfig())
+DATAFILE = "data.csv"
 
 def get_formatted_datetime():
     # Get the current time from the device (Assumes RTC is set correctly)
@@ -34,16 +19,12 @@ def get_formatted_datetime():
     
     return f"{day}-{month}-{year} {hours}:{minutes}"
 
-# Function to send an HTTP POST request
-def send_post_request(url, value):
-    #headers = {"Content-Type": "application/json"}
-    data_string = wifi_config.POST_PREFIX + get_formatted_datetime() + wifi_config.POST_INTERFIX + str(value)
+def write_value_to_datafile(value):
+    # Get the current time
+    timestamp = get_formatted_datetime()
     
-    try:
-        response = urequests.post(url, data=data_string)
-        # Todo get post working on http and on own server
-        print("Response:", response.text)
-        response.close()
-    except Exception as e:
-        print("Request failed:", e)
-    return response
+    # Open the data file in append mode
+    with open(DATAFILE, "a") as file:
+        # Write the timestamp and value to the file
+        file.write(f"{timestamp},{value}\n")
+        print(f"Written to {DATAFILE}: {timestamp},{value}")

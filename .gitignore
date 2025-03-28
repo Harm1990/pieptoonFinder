@@ -170,3 +170,4 @@ webrepl-master/webrepl.html
 webrepl-master/webrepl.js
 webrepl-master/webrepl_cli.py
 Pymakrprjct/wifi_config.py
+Pymakrprjct/webrepl_cfg.py
