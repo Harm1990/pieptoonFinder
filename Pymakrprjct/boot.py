@@ -20,14 +20,15 @@ if not wlan.isconnected():
     while not wlan.isconnected() and wifi_counter < 30:
         time.sleep(1)
         wifi_counter += 1
-    
-    print("Trying other WIFI_AP")
-    wlan.active(False) # Reset Wifi counters
-    wlan.active(True)
-    wlan.connect(wifi_config.WIFI_AP2, wifi_config.WIFI_PW)
+    if wifi_counter >= 30:
+        print("Failed to connect to WIFI_AP1, trying WIFI_AP2")
+        print("Trying other WIFI_AP")
+        wlan.active(False) # Reset Wifi counters
+        wlan.active(True)
+        wlan.connect(wifi_config.WIFI_AP2, wifi_config.WIFI_PW)
 
-    while not wlan.isconnected():
-        time.sleep(1)    
+        while not wlan.isconnected():
+            time.sleep(1)    
 
 print("Connected to WiFi:", wlan.ifconfig())
 webrepl.start()
