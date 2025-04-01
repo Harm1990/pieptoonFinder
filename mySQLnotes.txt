@@ -13,3 +13,5 @@ https://randomnerdtutorials.com/esp32-esp8266-mysql-database-php/
 https://raw.githubusercontent.com/RuiSantosdotme/ESP32-ESP8266-PHP-MySQL/master/code/HTTPS_ESP32_MySQL_Database_PHP.ino
 
 Used Firefox to debug posting
+
+!! For now unable to continue, because website seems to require HTTPS, whilst micropython does not support that?
